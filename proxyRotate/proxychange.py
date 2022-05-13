@@ -1,60 +1,79 @@
-import random
-import time
-import os
+from ast import For
+from random import randint
+from time import sleep
+from os import system
 
-def ServerStatus(server):
-    # check if we can ping the server
-    proxyIp = server
-    response = os.system("ping -c 1 " + proxyIp)
+def color_print(color, msg):
+
+    from colorama import Fore
+
+    if color == 'red':
+        print(Fore.RED, msg, Fore.WHITE, sep='')
+    elif color == 'green':
+        print(Fore.GREEN, msg, Fore.WHITE, sep='')
+    elif color == 'yellow':
+        print(Fore.YELLOW, msg, Fore.WHITE, sep='')
+    else:
+        print(msg)
+
+def server_status(server):
+
+    # Check if we can ping the server
+    response = system("ping -c 1 " + server)
     
     if response == 0:
         return True
     else:
         return False
 
-def proxyJump(intervalo):
-    print('')
-    print('Comenzando...')
+def proxy_jump(intervalo):
+
+    color_print('green', '\n[+]Comenzando')
 
     while True:
-        #generate proxy
-        seed = random.randint(0, 2238)
+
+        # Generate proxy
+        seed = randint(0, 2238)
+
         f = open("proxyList.txt", "r")
         proxy = f.readlines()[seed]
         f.close
 
         proxyWithoutPort = proxy.split(':')
-        # check if generated proxy is working and execute it
-        if ServerStatus(proxyWithoutPort[0]):
-            os.system('setproxy ' + proxy)
-            print(proxy + 'es nuestro proxy ahora mismo!')
-            # countdown
+
+        # Check if generated proxy is working and execute it
+        if server_status(proxyWithoutPort[0]):
+
+            system('setproxy ' + proxy)
+            color_print('green', '[+]' + proxy + 'es nuestro proxy ahora mismo!')
+
+            # Countdown
             for x in range(0,intervalo):
                 minutosRestantes = intervalo - x
-                print('Quedan ' + str(minutosRestantes) + ' minutos para el siguiente salto...')
-                time.sleep(60)
+                color_print('yellow', '[i]Quedan ' + str(minutosRestantes) + ' minutos para el siguiente salto...' )
+                sleep(60)
         else:
             # try with another proxy
-            print('El proxy no responde, probando con otro.')
-            time.sleep(2)
+            color_print('red', '[-]El proxy no responde, probando con otro.')
+            sleep(2)
 
 def proxyJumpManual():
-    seed = random.randint(0, 2238)
+    seed = randint(0, 2238)
     f = open("proxyList.txt", "r")
     proxy = f.readlines()[seed]
     f.close
     proxyWithoutPort = proxy.split(':')
 
-    if ServerStatus(proxyWithoutPort[0]):
-            os.system('setproxy ' + proxy)
-            print(proxy + 'es nuestro proxy ahora mismo!')
-            print('Enter para saltar al siguiente nodo...')
+    if server_status(proxyWithoutPort[0]):
+            system('setproxy ' + proxy)
+            color_print('green', '[+]' + proxy + 'es nuestro proxy ahora mismo!')
+            color_print('yellow','[i]Enter para saltar al siguiente nodo...')
             input()
             proxyJumpManual()
     else:
             # try with another proxy
-            print('El proxy no responde, probando con otro.')
-            time.sleep(2)
+            color_print('red', 'El proxy no responde, probando con otro.')
+            sleep(2)
             proxyJumpManual()
 
 def showCommandList():
@@ -73,32 +92,29 @@ def start():
     if res[0] == 'proxy.start':
         if len(res) == 2:
             t = int(res[1])
-            return proxyJump(t)
+            return proxy_jump(t)
         else:
-            print('Debes indicar el tiempo entre intervalos (en minutos).')
+            color_print('red', '[!]Debes indicar el tiempo entre intervalos (en minutos).')
             return start()
     elif res[0] == 'proxy.start.manual':
         return proxyJumpManual()
     elif res[0] == 'proxy.none':
-        os.system('setproxy none')
+        system('setproxy none')
         return start()
     elif res[0] == 'proxy.set':
         if len(res) == 2:
             p = res[1]
-            os.system('setproxy ' + p)
+            system('setproxy ' + p)
             return start()
         else:
-            print('Debes introducir el servidor a continuación del comando: serverIP:PORT')
+            color_print('red', '[!]Debes introducir el servidor a continuación del comando: serverIP:PORT')
             return start()
     elif res[0] == 'help':
         showCommandList()
         return start()
     else:
-        print('Revisa la sintaxis.')
+        color_print('red', '[!]Revisa la sintaxis.')
         return start()
 
-print('# # # # # #')
-print('Bienvenido de nuevo Admin, usa el comando "help" para ver los comandos.')
-print('...')
-time.sleep(1)
+color_print('green','\n[+]Bienvenido de nuevo Admin, usa el comando "help" para ver los comandos.')
 start()
